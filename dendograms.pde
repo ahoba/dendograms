@@ -21,6 +21,8 @@ int[][] originalDistances =
   { 9, 8, 5, 3, 0 }
 };
 
+int[][] copheneticMatrix;
+
 class Cluster
 {
   int[] elements;
@@ -74,7 +76,6 @@ class Cluster
   }
 }
 
-ArrayList<Cluster> allClusters = new ArrayList<Cluster>();
 ArrayList<Cluster> currentClusters = new ArrayList<Cluster>();
 
 void LoadInput()
@@ -120,7 +121,13 @@ void setup()
 {
   size(1000, 500);
   
+  textAlign(CENTER);
+  
+  fill(0, 0, 255);
+  
   LoadInput();
+  
+  copheneticMatrix = new int[originalDistances.length][originalDistances.length];
   
   for (int i = 0; i < originalDistances.length; i++)
   {
@@ -137,7 +144,6 @@ void setup()
     cluster.ym = 0;
     cluster.distance = 0;
     
-    allClusters.add(cluster);
     currentClusters.add(cluster);
   }
   
@@ -175,6 +181,7 @@ void setup()
         }
       }
     }
+    
     System.out.println(linkage == Linkage.Single ? "Min Distance: " : "Max Distance: " + min);
     System.out.println("New Cluster: " + cluster0.asString() + " + " + cluster1.asString() + ";");
     
@@ -199,6 +206,19 @@ void setup()
       }
     }
   }
+  
+  System.out.println("Finished!");
+  System.out.println("Cophenetic matrix:");
+  
+  for (int i = 0; i < copheneticMatrix.length; i++)
+  {
+    for (int j = 0; j < copheneticMatrix.length; j++)
+    {
+      System.out.print(copheneticMatrix[i][j] + ", ");
+    }
+    
+    System.out.println();
+  }
 }
 
 Cluster createNewCluster(Cluster cluster0, Cluster cluster1, int distance)
@@ -208,6 +228,12 @@ Cluster createNewCluster(Cluster cluster0, Cluster cluster1, int distance)
     for (int i = 0; i < cluster0.elements.length; i++)
     {
       newClusterElements[i] = cluster0.elements[i];
+      
+      for (int j = 0; j < cluster1.elements.length; j++)
+      {
+        copheneticMatrix[cluster0.elements[i]][cluster1.elements[j]] = distance;
+        copheneticMatrix[cluster1.elements[j]][cluster0.elements[i]] = distance;
+      }
     }
     
     for (int i = 0; i < cluster1.elements.length; i++)
@@ -235,6 +261,8 @@ int getDistance(Cluster cluster0, Cluster cluster1)
   return ret;
 }
 
+boolean saved = false;
+
 void draw()
 {
   Cluster root = currentClusters.get(0);
@@ -249,6 +277,13 @@ void draw()
     
     line(X_PADDING, y, X_PADDING + 10, y);
     text(root.distance - i, X_PADDING, y);
+  }
+  
+  if (!saved)
+  {
+    save((linkage == Linkage.Single ? "single" : "complete") + ".jpg");
+    
+    saved = true;
   }
 }
 
@@ -282,7 +317,6 @@ Point drawCluster(Cluster cluster, int maxDistance)
   }
   
   text(cluster.asString(), x, y);
-  //circle(x, y, 10);
   
   return new Point(x, y);
 }
